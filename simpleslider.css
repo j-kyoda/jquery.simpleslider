@@ -1,0 +1,26 @@
+/* coding: utf-8 */
+
+.box {
+    background-color: #ccc;
+    position: relative;
+    padding: 50px;
+    border: 1px solid #000;
+    margin: 10px;
+}
+
+.handle {
+    position: absolute;
+    border: 1px solid #666;
+    background-color: #fff;
+    width: 28px;
+    height: 28px;
+    border-radius: 5px;
+}
+
+.track {
+    position: absolute;
+    background-color: #888;
+    width: 10px;
+    height: 10px;
+    border-radius: 4px;
+}
