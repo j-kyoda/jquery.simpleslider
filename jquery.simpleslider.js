@@ -1,5 +1,5 @@
 /*
- * jQuery simpleslider v0.1
+ * jQuery simpleslider v0.2
  * http://makealone.jp/products/jquery.simpleslider
  *
  * Copyright 2013, makealone.jp
@@ -206,13 +206,13 @@
                     var $window = $(window);
                     if (isTouchSupported) {
                         the_handle.bind('touchstart', eventHandle);
-                        $window.bind('touchmove', eventHandle);
-                        $window.bind('touchend', eventHandle);
+                        $this.bind('touchmove', eventHandle);
+                        $this.bind('touchend', eventHandle);
                     } else {
                         the_handle.bind('mousedown', eventHandle);
-                        $window.bind('mousemove', eventHandle);
-                        //$window.bind('mouseout', eventHandle);
-                        $window.bind('mouseup', eventHandle);
+                        $this.bind('mousemove', eventHandle);
+                        //$this.bind('mouseout', eventHandle);
+                        $this.bind('mouseup', eventHandle);
                     }
                 });
             },
