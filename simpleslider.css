@@ -1,6 +1,6 @@
 /* coding: utf-8 */
 
-.box {
+.box, .box-disable {
     background-color: #ccc;
     position: relative;
     padding: 50px;
@@ -17,7 +17,16 @@
     border-radius: 5px;
 }
 
-.track {
+.handle-disable {
+    position: absolute;
+    border: 1px solid #666;
+    background-color: #999;
+    width: 28px;
+    height: 28px;
+    border-radius: 5px;
+}
+
+.track, .track-disable {
     position: absolute;
     background-color: #888;
     width: 10px;

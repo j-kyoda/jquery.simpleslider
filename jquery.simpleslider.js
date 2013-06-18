@@ -1,6 +1,6 @@
 /*
- * jQuery simpleslider v0.2
- * http://makealone.jp/products/jquery.simpleslider
+ * jQuery simpleslider v0.3
+ * http://makealone.jp/products/jquery.simpleslider/
  *
  * Copyright 2013, makealone.jp
  * Free to use and abuse under the MIT license.
@@ -24,6 +24,7 @@
         // change -- callback function for change
         //
 
+        // settings
         var defaults = {min: 0,
                         max: 100,
                         value: 0,
@@ -31,19 +32,37 @@
                         box_class: '',
                         track_class: '',
                         handle_class: '',
+                        box_disable_class: '',
+                        track_disable_class: '',
+                        handle_disable_class: '',
                         size: [0, 0],
                         change: (function() {})
                        };
-        // settings
-        var box_width = 150;
-        var box_height = 100;
 
         // environment
         var isTouchSupported = 'ontouchstart' in window;
+        var opts = $.extend(defaults, options);
 
         // define
         var VERTICAL = 'vertical';
         var HORIZONTAL = 'horizontal';
+        var SS_VALUE = 'simpleslider_value';
+        var SS_ENABLE = 'simpleslider_enable';
+
+        // functions
+        function getval(self) {
+            return self.data(SS_VALUE);
+        };
+
+        function setval(self, value) {
+            var val = value;
+            if (val != getval(self)) {
+                self.data(SS_VALUE, val);
+                opts.change(val);
+            }
+            self.text(val);
+        };
+
 
         // containes all method
         var methods = {
@@ -51,7 +70,6 @@
                 return this.each(function(i) {
                     var $this = $(this);
 
-                    var opts = $.extend(defaults, options);
 
                     // values
                     var touch_x = -1;
@@ -64,8 +82,10 @@
                     // create dom
                     $this.addClass(opts.box_class);
                     var the_handle = $(document.createElement("div"));
+                    the_handle.data('ss_role', 'handle');
                     the_handle.addClass(opts.handle_class);
                     var the_track = $(document.createElement("div"));
+                    the_track.data('ss_role', 'track');
                     the_track.addClass(opts.track_class);
                     the_track.append(the_handle);
                     $this.append(the_track);
@@ -101,15 +121,27 @@
                     };
 
                     function getval() {
-                        return $this.data('as_value');
+                        return $this.data(SS_VALUE);
                     };
 
                     function setval(value) {
                         var cval = clipval(value);
                         if (cval != getval()) {
-                            $this.data('as_value', cval);
+                            $this.data(SS_VALUE, cval);
                             opts.change(cval);
                         }
+                    };
+
+                    function getenable() {
+                        return $this.data(SS_ENABLE);
+                    };
+
+                    function setenable() {
+                        $this.data(SS_ENABLE, true);
+                    };
+
+                    function setdisable() {
+                        $this.data(SS_ENABLE, false);
                     };
 
                     function draw_handle() {
@@ -199,31 +231,75 @@
 
                     }
 
+                    $this.bind('_enable', function() {
+                        var enable = getenable();
+                        if (enable == false) {
+                            if (isTouchSupported) {
+                                the_handle.bind('touchstart', eventHandle);
+                                $this.bind('touchmove', eventHandle);
+                                $this.bind('touchend', eventHandle);
+                            } else {
+                                the_handle.bind('mousedown', eventHandle);
+                                $this.bind('mousemove', eventHandle);
+                                //$this.bind('mouseout', eventHandle);
+                                $this.bind('mouseup', eventHandle);
+                            }
+                        }
+                        setenable();
+                        $this.removeClass(opts.box_disable_class);
+                        the_handle.removeClass(opts.handle_disable_class);
+                        the_track.removeClass(opts.track_disable_class);
+                        $this.addClass(opts.box_class);
+                        the_handle.addClass(opts.handle_class);
+                        the_track.addClass(opts.track_class);
+                    });
+
+                    $this.bind('_disable', function() {
+                        var enable = getenable();
+                        if (enable == true) {
+                            if (isTouchSupported) {
+                                the_handle.unbind('touchstart', eventHandle);
+                                $this.unbind('touchmove', eventHandle);
+                                $this.unbind('touchend', eventHandle);
+                            } else {
+                                the_handle.unbind('mousedown', eventHandle);
+                                $this.unbind('mousemove', eventHandle);
+                                //$this.unbind('mouseout', eventHandle);
+                                $this.unbind('mouseup', eventHandle);
+                            }
+                            $this.removeClass(opts.box_class);
+                            the_handle.removeClass(opts.handle_class);
+                            the_track.removeClass(opts.track_class);
+                            $this.addClass(opts.box_disable_class);
+                            the_handle.addClass(opts.handle_disable_class);
+                            the_track.addClass(opts.track_disable_class);
+                        }
+                        setdisable();
+                    });
+
                     // init
                     setval(opts.value);
                     draw_handle();
-
-                    var $window = $(window);
-                    if (isTouchSupported) {
-                        the_handle.bind('touchstart', eventHandle);
-                        $this.bind('touchmove', eventHandle);
-                        $this.bind('touchend', eventHandle);
-                    } else {
-                        the_handle.bind('mousedown', eventHandle);
-                        $this.bind('mousemove', eventHandle);
-                        //$this.bind('mouseout', eventHandle);
-                        $this.bind('mouseup', eventHandle);
-                    }
+                    setdisable();
+                    $this.trigger('_enable');
                 });
             },
             get_val: function () {
                 $(this).data('as_value');
+            },
+            enable: function() {
+                var $this = $(this);
+                $this.trigger('_enable');
+            },
+            disable: function() {
+                var $this = $(this);
+                $this.trigger('_disable');
             }
         };
 
         // do
-        if (options == 'value') {
-            return methods.get_val.apply(this);
+        if (methods[options]) {
+            return methods[options].apply( this, Array.prototype.slice.call(arguments, 1));
         } else {
             return methods.create.apply(this);
         }
