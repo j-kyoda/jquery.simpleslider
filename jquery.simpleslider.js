@@ -1,5 +1,5 @@
 /*
- * jQuery simpleslider v0.3
+ * jQuery simpleslider v0.4
  * http://makealone.jp/products/jquery.simpleslider/
  *
  * Copyright 2013, makealone.jp
@@ -15,6 +15,7 @@
         //
         // min -- min value
         // max -- max value
+        // step -- value step
         // value -- initial value
         // orientation -- horizontal, vertical
         // box_class -- class for box
@@ -27,6 +28,7 @@
         // settings
         var defaults = {min: 0,
                         max: 100,
+                        step: 0,
                         value: 0,
                         orientaion: HORIZONTAL,
                         box_class: '',
@@ -47,29 +49,14 @@
         var VERTICAL = 'vertical';
         var HORIZONTAL = 'horizontal';
         var SS_VALUE = 'simpleslider_value';
+        var SS_STEP_VALUE = 'simpleslider_step_value';
         var SS_ENABLE = 'simpleslider_enable';
-
-        // functions
-        function getval(self) {
-            return self.data(SS_VALUE);
-        };
-
-        function setval(self, value) {
-            var val = value;
-            if (val != getval(self)) {
-                self.data(SS_VALUE, val);
-                opts.change(val);
-            }
-            self.text(val);
-        };
-
 
         // containes all method
         var methods = {
             create: function() {
                 return this.each(function(i) {
                     var $this = $(this);
-
 
                     // values
                     var touch_x = -1;
@@ -120,15 +107,33 @@
                         return Math.max(Math.min(val, opts.max), opts.min);
                     };
 
+                    function stepval(val) {
+                        return parseInt((val + opts.step / 2) / opts.step) * opts.step;
+                    };
+
                     function getval() {
                         return $this.data(SS_VALUE);
+                    };
+
+                    function getstepval() {
+                        return $this.data(SS_STEP_VALUE);
                     };
 
                     function setval(value) {
                         var cval = clipval(value);
                         if (cval != getval()) {
                             $this.data(SS_VALUE, cval);
-                            opts.change(cval);
+                            var val = cval;
+                            if (opts.step) {
+                                val = clipval(stepval(cval));
+                                if (val != getstepval()) {
+                                    $this.data(SS_STEP_VALUE, val);
+                                    opts.change(val);
+                                }
+                            } else {
+                                $this.data(SS_STEP_VALUE, val);
+                                opts.change(val);
+                            }
                         }
                     };
 
@@ -285,15 +290,13 @@
                 });
             },
             get_val: function () {
-                $(this).data('as_value');
+                return $(this).data(SS_STEP_VALUE);
             },
             enable: function() {
-                var $this = $(this);
-                $this.trigger('_enable');
+                $(this).trigger('_enable');
             },
             disable: function() {
-                var $this = $(this);
-                $this.trigger('_disable');
+                $(this).trigger('_disable');
             }
         };
 
