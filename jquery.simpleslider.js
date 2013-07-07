@@ -1,5 +1,5 @@
 /*
- * jQuery simpleslider v0.4
+ * jQuery simpleslider v0.5
  * http://makealone.jp/products/jquery.simpleslider/
  *
  * Copyright 2013, makealone.jp
@@ -24,6 +24,11 @@
         // size -- [width, height]
         // change -- callback function for change
         //
+        // method
+        // 'get_val' -- get value
+        // 'set_val' -- set value
+        // 'enable' -- can use slider
+        // 'disable' -- can not use slider
 
         // settings
         var defaults = {min: 0,
@@ -149,7 +154,7 @@
                         $this.data(SS_ENABLE, false);
                     };
 
-                    function draw_handle() {
+                    function draw_handle(animate) {
                         var val = getval();
                         var top;
                         var left;
@@ -160,14 +165,19 @@
                             top =  (track_height / 2) - (handle_height / 2);
                             left = (track_width / range * val) - (handle_width / 2);
                         }
-                        the_handle.css('top', top + 'px');
-                        the_handle.css('left', left + 'px');
+                        var cssobj = {'top': top + 'px',
+                                      'left': left + 'px'
+                                     };
+                        if (animate == true) {
+                            the_handle.animate(cssobj, 400);
+                        } else {
+                            the_handle.css(cssobj);
+                        }
                     }
 
                     function move_handle(dx, dy) {
                         var value_init = getval();
-                        var diff_var = 0;
-                        //var offset = the_handle.offset();
+                        var diff_val = 0;
                         if (opts.orientation == VERTICAL) {
                             diff_val = range / track_height * dy;
                         } else {
@@ -182,10 +192,35 @@
                             var touch = e.originalEvent.changedTouches[0];
                             return {'x': touch.clientX, 'y': touch.clientY};
                         }
-                        if (e.type == 'mousedown' || e.type == 'mousemove') {
+                        if (e.type == 'mousedown' || e.type == 'mousemove' || e.type == 'click') {
                             return {'x': e.pageX, 'y': e.pageY};
                         }
                         return {'x': -1, 'y': -1};
+                    }
+
+                    // Track
+                    function eventTrack(e) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        switch (e.type) {
+                        case 'click':
+                            if (e.target != e.currentTarget) {
+                                return;
+                            }
+                            (function() {
+                                var point = getPoint(e);
+                                var offset = the_track.offset();
+                                var val = 0;
+                                if (opts.orientation == VERTICAL) {
+                                    val = (point.y - offset.top) / track_height * range;
+                                } else {
+                                    val = (point.x - offset.left) / track_width * range;
+                                }
+                                setval(val);
+                                draw_handle(true);
+                            })();
+                            break;
+                        }
                     }
 
                     // Handle
@@ -236,14 +271,21 @@
 
                     }
 
+                    $this.bind('_setval', function(event, value) {
+                        setval(value);
+                        draw_handle(true);
+                    });
+
                     $this.bind('_enable', function() {
                         var enable = getenable();
                         if (enable == false) {
                             if (isTouchSupported) {
+                                the_track.bind('click', eventTrack);
                                 the_handle.bind('touchstart', eventHandle);
                                 $this.bind('touchmove', eventHandle);
                                 $this.bind('touchend', eventHandle);
                             } else {
+                                the_track.bind('click', eventTrack);
                                 the_handle.bind('mousedown', eventHandle);
                                 $this.bind('mousemove', eventHandle);
                                 //$this.bind('mouseout', eventHandle);
@@ -263,10 +305,12 @@
                         var enable = getenable();
                         if (enable == true) {
                             if (isTouchSupported) {
+                                the_track.unbind('click', eventTrack);
                                 the_handle.unbind('touchstart', eventHandle);
                                 $this.unbind('touchmove', eventHandle);
                                 $this.unbind('touchend', eventHandle);
                             } else {
+                                the_track.unbind('click', eventTrack);
                                 the_handle.unbind('mousedown', eventHandle);
                                 $this.unbind('mousemove', eventHandle);
                                 //$this.unbind('mouseout', eventHandle);
@@ -291,6 +335,9 @@
             },
             get_val: function () {
                 return $(this).data(SS_STEP_VALUE);
+            },
+            set_val: function (value) {
+                $(this).trigger('_setval', value);
             },
             enable: function() {
                 $(this).trigger('_enable');

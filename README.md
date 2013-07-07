@@ -1,5 +1,5 @@
 # simpleslider
-_Current version: 0.4_
+_Current version: 0.5_
 
 Simpleslider is a jQuery plugin that allow you to create slide bar.
 It support touch device.
